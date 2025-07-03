@@ -37,7 +37,7 @@ struct ContentView: View {
         NavigationView {
             VStack(spacing: 10) {
                 // アプリのタイトル
-                Text("To Do List 🛒")
+                Text("To Do 🛒")
                     .font(.title2)
                     .fontWeight(.bold)
                     .padding(.top, 2)
