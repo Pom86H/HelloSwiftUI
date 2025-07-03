@@ -30,7 +30,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		27DC83DC2E16599F0077CB3D /* Exceptions for "HelloSwiftU" folder in "HelloSwiftU" target */ = {
+		27DC83DC2E16599F0077CB3D /* Exceptions for "HelloSwiftUI" folder in "HelloSwiftU" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -40,12 +40,12 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		279FD0D92E1529C600DA5734 /* HelloSwiftU */ = {
+		279FD0D92E1529C600DA5734 /* HelloSwiftUI */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				27DC83DC2E16599F0077CB3D /* Exceptions for "HelloSwiftU" folder in "HelloSwiftU" target */,
+				27DC83DC2E16599F0077CB3D /* Exceptions for "HelloSwiftUI" folder in "HelloSwiftU" target */,
 			);
-			path = HelloSwiftU;
+			path = HelloSwiftUI;
 			sourceTree = "<group>";
 		};
 		279FD0E72E1529C800DA5734 /* HelloSwiftUTests */ = {
@@ -88,7 +88,7 @@
 		279FD0CE2E1529C600DA5734 = {
 			isa = PBXGroup;
 			children = (
-				279FD0D92E1529C600DA5734 /* HelloSwiftU */,
+				279FD0D92E1529C600DA5734 /* HelloSwiftUI */,
 				279FD0E72E1529C800DA5734 /* HelloSwiftUTests */,
 				279FD0F12E1529C800DA5734 /* HelloSwiftUUITests */,
 				279FD0D82E1529C600DA5734 /* Products */,
@@ -121,7 +121,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				279FD0D92E1529C600DA5734 /* HelloSwiftU */,
+				279FD0D92E1529C600DA5734 /* HelloSwiftUI */,
 			);
 			name = HelloSwiftU;
 			packageProductDependencies = (
@@ -199,7 +199,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 279FD0D22E1529C600DA5734 /* Build configuration list for PBXProject "HelloSwiftU" */;
+			buildConfigurationList = 279FD0D22E1529C600DA5734 /* Build configuration list for PBXProject "HelloSwiftUI" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -530,7 +530,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		279FD0D22E1529C600DA5734 /* Build configuration list for PBXProject "HelloSwiftU" */ = {
+		279FD0D22E1529C600DA5734 /* Build configuration list for PBXProject "HelloSwiftUI" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				279FD0F62E1529C800DA5734 /* Debug */,
