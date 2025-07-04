@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		2796BC632E17606C00EA197D /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 2796BC622E17606C00EA197D /* Lottie */; };
+		2796BC662E17607200EA197D /* Lottie-Dynamic in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 2796BC642E17607200EA197D /* Lottie-Dynamic */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		279FD0E52E1529C800DA5734 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -22,6 +27,20 @@
 			remoteInfo = HelloSwiftU;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		2796BC672E17607200EA197D /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				2796BC662E17607200EA197D /* Lottie-Dynamic in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		279FD0D72E1529C600DA5734 /* HelloSwiftU.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HelloSwiftU.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -65,6 +84,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2796BC632E17606C00EA197D /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -85,12 +105,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2796BC612E17606C00EA197D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		279FD0CE2E1529C600DA5734 = {
 			isa = PBXGroup;
 			children = (
 				279FD0D92E1529C600DA5734 /* HelloSwiftU */,
 				279FD0E72E1529C800DA5734 /* HelloSwiftUTests */,
 				279FD0F12E1529C800DA5734 /* HelloSwiftUUITests */,
+				2796BC612E17606C00EA197D /* Frameworks */,
 				279FD0D82E1529C600DA5734 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -115,6 +143,7 @@
 				279FD0D32E1529C600DA5734 /* Sources */,
 				279FD0D42E1529C600DA5734 /* Frameworks */,
 				279FD0D52E1529C600DA5734 /* Resources */,
+				2796BC672E17607200EA197D /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -125,6 +154,8 @@
 			);
 			name = HelloSwiftU;
 			packageProductDependencies = (
+				2796BC622E17606C00EA197D /* Lottie */,
+				2796BC642E17607200EA197D /* Lottie-Dynamic */,
 			);
 			productName = HelloSwiftU;
 			productReference = 279FD0D72E1529C600DA5734 /* HelloSwiftU.app */;
@@ -208,6 +239,9 @@
 			);
 			mainGroup = 279FD0CE2E1529C600DA5734;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				2796BC552E17584E00EA197D /* XCRemoteSwiftPackageReference "lottie-ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 279FD0D82E1529C600DA5734 /* Products */;
 			projectDirPath = "";
@@ -567,6 +601,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2796BC552E17584E00EA197D /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2796BC622E17606C00EA197D /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2796BC552E17584E00EA197D /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
+		};
+		2796BC642E17607200EA197D /* Lottie-Dynamic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2796BC552E17584E00EA197D /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = "Lottie-Dynamic";
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 279FD0CF2E1529C600DA5734 /* Project object */;
 }
