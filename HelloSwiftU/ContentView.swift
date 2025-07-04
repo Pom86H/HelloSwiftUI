@@ -76,101 +76,100 @@ struct ContentView: View {
                     }
 
                     // 買い物リストの表示セクション
-                    ScrollView {
-                        LazyVStack(spacing: 8) {
-                            // 各カテゴリをループ
-                            ForEach(categories, id: \.self) { category in
-                                // そのカテゴリにアイテムが存在する場合のみ表示
-                                if let items = shoppingList[category], !items.isEmpty {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        HStack {
-                                            Text(category) // カテゴリ名
-                                                .font(.subheadline)
-                                                .fontWeight(.semibold)
-                                            Spacer()
-                                            // 編集モードで、かつ削除可能なカテゴリの場合、削除ボタンを表示
-                                            if editMode?.wrappedValue == .active && canDeleteCategory(category) {
-                                                Button(action: {
-                                                    categoryToDelete = category
-                                                    showDeleteCategoryConfirmation = true
-                                                }) {
-                                                    Image(systemName: "trash") // ゴミ箱アイコン
-                                                        .foregroundColor(.red)
-                                                }
-                                                .buttonStyle(BorderlessButtonStyle()) // ボタンのスタイルをリセット
-                                                // カテゴリ削除確認ダイアログ
-                                                .confirmationDialog("カテゴリを削除しますか？", isPresented: $showDeleteCategoryConfirmation, titleVisibility: .visible) {
-                                                    if let category = categoryToDelete, canDeleteCategory(category) {
-                                                        Button("削除", role: .destructive) {
-                                                            deleteCategory(category) // カテゴリ削除メソッドの呼び出し
+                    List {
+                        // 各カテゴリをループ
+                        ForEach(categories, id: \.self) { category in
+                            // そのカテゴリにアイテムが存在する場合のみ表示
+                            if let items = shoppingList[category], !items.isEmpty {
+                                Section(header:
+                                            HStack {
+                                                Text(category) // カテゴリ名
+                                                    .font(.subheadline)
+                                                    .fontWeight(.semibold)
+                                                Spacer()
+                                                // 編集モードで、かつ削除可能なカテゴリの場合、削除ボタンを表示
+                                                if editMode?.wrappedValue == .active && canDeleteCategory(category) {
+                                                    Button(action: {
+                                                        categoryToDelete = category
+                                                        showDeleteCategoryConfirmation = true
+                                                    }) {
+                                                        Image(systemName: "trash") // ゴミ箱アイコン
+                                                            .foregroundColor(.red)
+                                                    }
+                                                    .buttonStyle(BorderlessButtonStyle()) // ボタンのスタイルをリセット
+                                                    // カテゴリ削除確認ダイアログ
+                                                    .confirmationDialog("カテゴリを削除しますか？", isPresented: $showDeleteCategoryConfirmation, titleVisibility: .visible) {
+                                                        if let category = categoryToDelete, canDeleteCategory(category) {
+                                                            Button("削除", role: .destructive) {
+                                                                deleteCategory(category) // カテゴリ削除メソッドの呼び出し
+                                                                categoryToDelete = nil
+                                                            }
+                                                        }
+                                                        Button("キャンセル", role: .cancel) {
                                                             categoryToDelete = nil
                                                         }
                                                     }
-                                                    Button("キャンセル", role: .cancel) {
-                                                        categoryToDelete = nil
-                                                    }
                                                 }
                                             }
-                                        }
-                                        // 各アイテムをループ
-                                        ForEach(Array(items.enumerated()), id: \.element) { index, item in
-                                            HStack {
-                                                // 編集モードの場合、並び替えハンドルを表示
-                                                if editMode?.wrappedValue == .active {
-                                                    Image(systemName: "line.3.horizontal")
-                                                        .foregroundColor(.gray)
-                                                        .padding(.trailing, 4)
-                                                }
-                                                // アイテム削除ボタン (完了マークとして機能)
-                                                Button(action: {
-                                                    deleteItem(item, from: category) // アイテム削除メソッドの呼び出し
-                                                }) {
-                                                    Image(systemName: "circle") // 未完了の丸アイコン
-                                                        .foregroundColor(.gray)
-                                                }
-                                                .buttonStyle(PlainButtonStyle()) // ボタンのスタイルをリセット
-                                                .padding(.trailing, 4)
+                                ) {
+                                    ForEach(Array(items.enumerated()), id: \.element) { index, item in
+                                        HStack {
+                                            // 編集モードの場合、並び替えハンドルを表示
+                                            if editMode?.wrappedValue == .active {
+                                                Image(systemName: "line.3.horizontal")
+                                                    .foregroundColor(.gray)
+                                                    .padding(.trailing, 4)
+                                            }
+                                            // アイテム削除ボタン (完了マークとして機能)
+                                            Button(action: {
+                                                deleteItem(item, from: category) // アイテム削除メソッドの呼び出し
+                                            }) {
+                                                Image(systemName: "circle") // 未完了の丸アイコン
+                                                    .foregroundColor(.gray)
+                                            }
+                                            .buttonStyle(PlainButtonStyle()) // ボタンのスタイルをリセット
+                                            .padding(.trailing, 4)
 
-                                                // 編集モードで、かつ現在タップされているアイテムが編集対象の場合、TextFieldを表示
-                                                if editMode?.wrappedValue == .active && editingItem?.category == category && editingItem?.originalItem == item {
-                                                    TextField("アイテム名を編集", text: $editedItemName, onCommit: {
-                                                        // 編集が確定されたらアイテムを更新し、編集モードを終了
-                                                        updateItem(originalItem: item, in: category, with: editedItemName)
-                                                        editingItem = nil
-                                                    })
+                                            // 編集モードで、かつ現在タップされているアイテムが編集対象の場合、TextFieldを表示
+                                            if editMode?.wrappedValue == .active && editingItem?.category == category && editingItem?.originalItem == item {
+                                                TextField("アイテム名を編集", text: $editedItemName, onCommit: {
+                                                    // 編集が確定されたらアイテムを更新し、編集モードを終了
+                                                    updateItem(originalItem: item, in: category, with: editedItemName)
+                                                    editingItem = nil
+                                                })
+                                                .font(.subheadline)
+                                                .autocorrectionDisabled(true) // 自動修正を無効化
+                                                .textInputAutocapitalization(.never) // 自動大文字化を無効化
+                                            } else {
+                                                // 通常表示の場合、Textを表示し、編集モードでタップされたら編集可能にする
+                                                Text(item)
                                                     .font(.subheadline)
-                                                    .autocorrectionDisabled(true) // 自動修正を無効化
-                                                    .textInputAutocapitalization(.never) // 自動大文字化を無効化
-                                                } else {
-                                                    // 通常表示の場合、Textを表示し、編集モードでタップされたら編集可能にする
-                                                    Text(item)
-                                                        .font(.subheadline)
-                                                        .onTapGesture {
-                                                            if editMode?.wrappedValue == .active {
-                                                                editingItem = (category: category, originalItem: item) // 編集対象を設定
-                                                                editedItemName = item // TextFieldの初期値を現在のアイテム名に設定
-                                                            }
+                                                    .onTapGesture {
+                                                        if editMode?.wrappedValue == .active {
+                                                            editingItem = (category: category, originalItem: item) // 編集対象を設定
+                                                            editedItemName = item // TextFieldの初期値を現在のアイテム名に設定
                                                         }
-                                                }
-                                                Spacer()
+                                                    }
                                             }
-                                            .padding(8)
-                                            .background(.ultraThinMaterial)
-                                            .cornerRadius(6)
-                                            .shadow(color: (categoryColors[category] ?? .gray).opacity(0.2), radius: 1, x: 0, y: 1)
-                                            .padding(.horizontal, 4)
-                                            .listRowSeparator(.hidden) // リストの区切り線を非表示に
+                                            Spacer()
                                         }
-                                        // アイテムの並び替え機能
-                                        .onMove { indices, newOffset in
-                                            moveItems(in: category, indices: indices, newOffset: newOffset)
-                                        }
+                                        .padding(8)
+                                        .background(.ultraThinMaterial)
+                                        .cornerRadius(6)
+                                        .shadow(color: (categoryColors[category] ?? .gray).opacity(0.2), radius: 1, x: 0, y: 1)
+                                        .padding(.horizontal, 4)
+                                        .listRowSeparator(.hidden) // リストの区切り線を非表示に
+                                    }
+                                    // アイテムの並び替え機能
+                                    .onMove { indices, newOffset in
+                                        moveItems(in: category, indices: indices, newOffset: newOffset)
                                     }
                                 }
                             }
                         }
-                        .padding(.top, 4)
                     }
+                    .listStyle(.plain)
+                    .padding(.top, 4)
 
                     // 削除したアイテムの履歴セクション
                     if !deletedItems.isEmpty {
@@ -240,12 +239,21 @@ struct ContentView: View {
                 .onAppear {
                     loadItems()
                     loadDeletedItems()
+                    loadCategories()
                 }
             }
             .navigationBarTitle("買い物リスト")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
+                    Button(editMode?.wrappedValue == .active ? "完了" : "編集") {
+                        withAnimation {
+                            if editMode?.wrappedValue == .active {
+                                editMode?.wrappedValue = .inactive
+                            } else {
+                                editMode?.wrappedValue = .active
+                            }
+                        }
+                    }
                 }
             }
             .environment(\.editMode, editMode)
@@ -311,7 +319,20 @@ extension ContentView {
         let trimmedCategory = newCategory.trimmingCharacters(in: .whitespaces)
         guard !trimmedCategory.isEmpty, !categories.contains(trimmedCategory) else { return } // 空または重複は追加しない
         categories.append(trimmedCategory)
+        saveCategories() // 保存を追加
         newCategory = ""
+    }
+
+    /// カテゴリのデータをUserDefaultsに保存します。
+    private func saveCategories() {
+        UserDefaults.standard.set(categories, forKey: "categoriesKey")
+    }
+
+    /// UserDefaultsからカテゴリデータを読み込みます。
+    private func loadCategories() {
+        if let saved = UserDefaults.standard.stringArray(forKey: "categoriesKey") {
+            categories = saved
+        }
     }
 
     /// UserDefaultsから買い物リストのデータを読み込みます。
