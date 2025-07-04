@@ -42,11 +42,6 @@ struct ContentView: View {
 //                    .opacity(0.2)
 
                 VStack(spacing: 10) {
-                    // アプリのタイトル
-                    Text("To Do 🛒")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .padding(.top, 2)
 
                     // 新しいアイテムの追加セクション
                     HStack(spacing: 8) {
@@ -242,7 +237,7 @@ struct ContentView: View {
                     loadCategories()
                 }
             }
-            .navigationBarTitle("買い物リスト")
+            .navigationBarTitle("To Do 🛒")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(editMode?.wrappedValue == .active ? "完了" : "編集") {
