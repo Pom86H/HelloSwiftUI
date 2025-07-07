@@ -1,3 +1,16 @@
+// MARK: - ModernButtonStyle
+struct ModernButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .background(.ultraThinMaterial)
+            .cornerRadius(12)
+            .shadow(color: .black.opacity(0.1), radius: 3, x: 0, y: 2)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
+    }
+}
 import SwiftUI
 import WidgetKit
 
@@ -9,6 +22,7 @@ struct ContentView: View {
     @State private var categories: [String] = ["食品", "日用品", "その他"] // カテゴリの一覧
     @State private var newCategory: String = "" // 新しいカテゴリの入力用
     @State private var showAddTaskSheet = false
+    @State private var isExpanded: Bool = false
     @State private var showAddItemSheet = false
     @State private var showAddCategorySheet = false
 
@@ -16,6 +30,8 @@ struct ContentView: View {
 
     @State private var categoryToDelete: String? = nil // 削除確認ダイアログで選択されたカテゴリ
     @State private var showDeleteCategoryConfirmation = false // カテゴリ削除確認ダイアログの表示/非表示
+
+    @State private var selectedCategoryForColorChange: String? = nil
 
     @Environment(\.editMode) private var editMode // SwiftUIの編集モード環境変数
 
@@ -28,8 +44,8 @@ struct ContentView: View {
     private let shoppingListKey = "shoppingListKey" // UserDefaultsに買い物リストを保存するためのキー
     private let deletedItemsKey = "deletedItemsKey" // UserDefaultsに削除履歴を保存するためのキー
 
-    // カテゴリごとの色を定義 (視覚的な区別のため)
-    private let categoryColors: [String: Color] = [
+    // カテゴリごとの色を定義 (視覚的な区別のため) - カスタマイズ可能
+    @State private var categoryColors: [String: Color] = [
         "食品": .green,
         "日用品": .blue,
         "その他": .gray
@@ -65,16 +81,90 @@ struct ContentView: View {
                 }
                 .padding(.bottom, 60)
 
+                // --- カスタムポップアップ ---
+                if showAddTaskSheet {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            withAnimation { showAddTaskSheet = false }
+                        }
+
+                    ZStack {
+                        // 左斜め上のリスト追加
+                        Button {
+                            withAnimation {
+                                showAddTaskSheet = false
+                                showAddItemSheet = true
+                            }
+                        } label: {
+                            VStack {
+                                Image(systemName: "list.bullet")
+                                    .font(.system(size: 20, weight: .regular))
+                                Text("リスト")
+                                    .font(.caption2)
+                            }
+                            .foregroundColor(.white)
+                            .frame(width: 56, height: 56)
+                            .background(
+                                Color(red: 95/255, green: 127/255, blue: 103/255)
+                                    .overlay(.ultraThinMaterial)
+                            )
+                            .clipShape(Circle())
+                            .shadow(radius: 4)
+                        }
+                        .offset(x: -50, y: -100)
+
+                        // 左のカテゴリ追加
+                        Button {
+                            withAnimation {
+                                showAddTaskSheet = false
+                                showAddCategorySheet = true
+                            }
+                        } label: {
+                            VStack {
+                                Image(systemName: "folder.badge.plus")
+                                    .font(.system(size: 20, weight: .regular))
+                                Text("カテゴリ")
+                                    .font(.caption2)
+                            }
+                            .foregroundColor(.white)
+                            .frame(width: 56, height: 56)
+                            .background(
+                                Color(red: 95/255, green: 127/255, blue: 103/255)
+                                    .overlay(.ultraThinMaterial)
+                            )
+                            .clipShape(Circle())
+                            .shadow(radius: 4)
+                        }
+                        .offset(x: -95, y: -30)
+                    }
+                    .transition(.scale)
+                }
+                // --- end カスタムポップアップ ---
+
                 plusButton
             }
             .navigationTitle("To Do 🛒")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(editMode?.wrappedValue == .active ? "完了" : "編集") {
+                    Button {
                         withAnimation {
                             editMode?.wrappedValue = editMode?.wrappedValue == .active ? .inactive : .active
                         }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: editMode?.wrappedValue == .active ? "checkmark" : "square.and.pencil")
+                                .foregroundColor(.white)
+                            Text(editMode?.wrappedValue == .active ? "完了" : "編集")
+                                .foregroundColor(.white)
+                        }
+                        .font(.caption)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(Color(hex: "#5F7F67"))
+                        .cornerRadius(12)
                     }
+                    .frame(width: 100, height: 40)
                 }
             }
             .environment(\.editMode, editMode)
@@ -82,150 +172,191 @@ struct ContentView: View {
                 loadItems()
                 loadDeletedItems()
                 loadCategories()
+                loadCategoryColors()
             }
         }
         // --- シート群はbodyの末尾に配置 ---
-        .sheet(isPresented: $showAddTaskSheet) {
-            NavigationView {
-                VStack(spacing: 20) {
-                    Text("追加するものを選んでください")
-                        .font(.headline)
-                        .padding(.top)
+        .overlay(
+            Group {
+                if showAddItemSheet {
+                    ZStack(alignment: .bottom) {
+                        Color.black.opacity(0.3)
+                            .ignoresSafeArea()
+                            .onTapGesture {
+                                withAnimation { showAddItemSheet = false }
+                            }
+                        VStack(spacing: 16) {
+                            VStack(alignment: .leading, spacing: 16) {
+                                // 入力欄
+                                TextField("例：ランチミーティング 1/10 12:30", text: $newItem)
+                                    .padding()
+                                    .background(.ultraThinMaterial)
+                                    .cornerRadius(12)
 
-                    Button(action: {
-                        showAddTaskSheet = false
-                        showAddItemSheet = true
-                    }) {
-                        Label("リストにアイテムを追加", systemImage: "list.bullet")
-                            .frame(maxWidth: .infinity)
+                                // 説明欄
+                                Text("説明")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                TextField("メモを追加", text: .constant(""))
+                                    .padding()
+                                    .background(.ultraThinMaterial)
+                                    .cornerRadius(12)
+
+                                // オプション（ダミー）
+                                HStack {
+                                    Button("今日") {}
+                                        .padding(.horizontal)
+                                        .padding(.vertical, 8)
+                                        .background(.thinMaterial)
+                                        .cornerRadius(20)
+
+                                    Button("優先度") {}
+                                        .padding(.horizontal)
+                                        .padding(.vertical, 8)
+                                        .background(.thinMaterial)
+                                        .cornerRadius(20)
+
+                                    Button("リマインダー") {}
+                                        .padding(.horizontal)
+                                        .padding(.vertical, 8)
+                                        .background(.thinMaterial)
+                                        .cornerRadius(20)
+                                }
+
+                                // 保存ボタン
+                                Button {
+                                    addItem()
+                                    showAddItemSheet = false
+                                } label: {
+                                    HStack {
+                                        Image(systemName: "plus")
+                                        Text("追加").fontWeight(.bold)
+                                    }
+                                }
+                                .buttonStyle(ModernButtonStyle())
+                                .disabled(newItem.isEmpty)
+                            }
                             .padding()
                             .background(.ultraThinMaterial)
-                            .cornerRadius(10)
-                    }
+                            .cornerRadius(20)
+                            .padding(.horizontal, 24)
 
-                    Button(action: {
-                        showAddTaskSheet = false
-                        showAddCategorySheet = true
-                    }) {
-                        Label("新しいカテゴリを追加", systemImage: "folder.badge.plus")
-                            .frame(maxWidth: .infinity)
+                            // バツボタン
+                            Button {
+                                showAddItemSheet = false
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.title)
+                                    .foregroundColor(.gray)
+                                    .padding(.top, 8)
+                            }
+                        }
+                        .padding(.bottom, 32)
+                        .transition(.move(edge: .bottom))
+                    }
+                }
+            }
+        )
+        .overlay(
+            Group {
+                if showAddCategorySheet {
+                    ZStack(alignment: .bottom) {
+                        Color.black.opacity(0.3)
+                            .ignoresSafeArea()
+                            .onTapGesture {
+                                withAnimation { showAddCategorySheet = false }
+                            }
+                        VStack(spacing: 16) {
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("新しいカテゴリ")
+                                    .font(.headline)
+                                    .padding(.bottom, 4)
+                                TextField("新しいカテゴリー名", text: $newCategory)
+                                    .padding(8)
+                                    .background(.ultraThinMaterial)
+                                    .cornerRadius(8)
+                                    .font(.subheadline)
+                                ColorPicker("色を選択", selection: Binding(
+                                    get: { categoryColors[newCategory] ?? .gray },
+                                    set: { categoryColors[newCategory] = $0 }
+                                ))
+                                .padding()
+                                .background(.ultraThinMaterial)
+                                .cornerRadius(12)
+                                .shadow(radius: 2)
+                                Button("追加") {
+                                    addCategory()
+                                    newCategory = ""
+                                    showAddCategorySheet = false
+                                }
+                                .buttonStyle(ModernButtonStyle())
+                                .disabled(newCategory.trimmingCharacters(in: .whitespaces).isEmpty)
+                            }
                             .padding()
                             .background(.ultraThinMaterial)
-                            .cornerRadius(10)
-                    }
-
-                    Spacer()
-                }
-                .padding()
-                .navigationTitle("追加")
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(action: {
-                            showAddTaskSheet = false
-                        }) {
-                            Image(systemName: "xmark")
+                            .cornerRadius(20)
+                            .padding(.horizontal, 24)
+                            // Close button
+                            Button {
+                                showAddCategorySheet = false
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.title)
+                                    .foregroundColor(.gray)
+                                    .padding(.top, 8)
+                            }
                         }
+                        .padding(.bottom, 32)
+                        .transition(.move(edge: .bottom))
                     }
                 }
             }
-        }
-        .sheet(isPresented: $showAddItemSheet) {
-            NavigationView {
-                VStack(spacing: 16) {
-                    TextField("買うもの", text: $newItem)
-                        .padding(12)
-                        .background(.ultraThinMaterial)
-                        .cornerRadius(8)
-                        .font(.subheadline)
-
-                    Picker("カテゴリ", selection: $selectedCategory) {
-                        ForEach(categories, id: \.self) { category in
-                            Text(category)
-                        }
-                    }
-                    .pickerStyle(MenuPickerStyle())
-
-                    Button("追加") {
-                        addItem()
-                        showAddItemSheet = false
-                    }
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(.ultraThinMaterial)
-                    .cornerRadius(8)
-                    .disabled(newItem.isEmpty)
-
-                    Spacer()
-                }
-                .padding()
-                .navigationTitle("新しいタスク")
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(action: {
-                            showAddItemSheet = false
-                        }) {
-                            Image(systemName: "xmark")
-                        }
-                    }
-                }
-            }
-        }
-        .sheet(isPresented: $showAddCategorySheet) {
-            NavigationView {
-                VStack(spacing: 16) {
-                    TextField("新しいカテゴリー名", text: $newCategory)
-                        .padding(8)
-                        .background(.ultraThinMaterial)
-                        .cornerRadius(8)
-                        .font(.subheadline)
-
-                    Button("追加") {
-                        addCategory()
-                        newCategory = ""
-                        showAddCategorySheet = false
-                    }
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 10)
-                    .background(.ultraThinMaterial)
-                    .cornerRadius(8)
-                    .font(.subheadline)
-                    .disabled(newCategory.trimmingCharacters(in: .whitespaces).isEmpty)
-
-                    Spacer()
-                }
-                .padding()
-                .navigationTitle("新しいカテゴリ")
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(action: {
-                            showAddCategorySheet = false
-                        }) {
-                            Image(systemName: "xmark")
-                        }
-                    }
-                }
-            }
-        }
+        )
     }
 
 private func headerView(for category: String) -> some View {
-    HStack {
-        Text(category)
-            .font(.subheadline)
-            .fontWeight(.semibold)
-        Spacer()
-        if editMode?.wrappedValue == .active && canDeleteCategory(category) {
-            Button {
-                categoryToDelete = category
-                showDeleteCategoryConfirmation = true
-            } label: {
-                Image(systemName: "trash")
-                    .foregroundColor(.red)
+    VStack(alignment: .leading, spacing: 4) {
+        HStack {
+            Text(category)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .onLongPressGesture {
+                    selectedCategoryForColorChange = category
+                }
+            Spacer()
+            if editMode?.wrappedValue == .active && canDeleteCategory(category) {
+                Button {
+                    categoryToDelete = category
+                    showDeleteCategoryConfirmation = true
+                } label: {
+                    Image(systemName: "trash")
+                        .foregroundColor(.red)
+                }
+                .confirmationDialog("カテゴリを削除しますか？", isPresented: $showDeleteCategoryConfirmation) {
+                    if let category = categoryToDelete {
+                        Button("削除", role: .destructive) { deleteCategory(category) }
+                        Button("キャンセル", role: .cancel) { categoryToDelete = nil }
+                    }
+                }
             }
-            .confirmationDialog("カテゴリを削除しますか？", isPresented: $showDeleteCategoryConfirmation) {
-                if let category = categoryToDelete {
-                    Button("削除", role: .destructive) { deleteCategory(category) }
-                    Button("キャンセル", role: .cancel) { categoryToDelete = nil }
+        }
+
+        if selectedCategoryForColorChange == category {
+            let presetColors: [Color] = [
+                .red, .orange, .yellow, .green, .blue, .purple, .gray
+            ]
+            HStack {
+                ForEach(presetColors, id: \.self) { color in
+                    Circle()
+                        .fill(color)
+                        .frame(width: 32, height: 32)
+                        .shadow(radius: 2)
+                        .overlay(Circle().stroke(Color.white, lineWidth: 1))
+                        .onTapGesture {
+                            categoryColors[category] = color
+                            saveCategoryColors()
+                            selectedCategoryForColorChange = nil
+                        }
                 }
             }
         }
@@ -234,13 +365,19 @@ private func headerView(for category: String) -> some View {
 
 private func itemRow(for item: String, in category: String) -> some View {
     HStack {
+        // カテゴリカラー付きの小さな丸
+        Circle()
+            .fill(categoryColors[category] ?? .gray)
+            .frame(width: 8, height: 8)
+
         if editMode?.wrappedValue == .active {
             Image(systemName: "line.3.horizontal").foregroundColor(.gray)
         }
         Button {
             deleteItem(item, from: category)
         } label: {
-            Image(systemName: "circle").foregroundColor(.gray)
+            Image(systemName: "circle")
+                .foregroundColor(categoryColors[category] ?? .gray)
         }
         .buttonStyle(.plain)
 
@@ -259,7 +396,14 @@ private func itemRow(for item: String, in category: String) -> some View {
         }
     }
     .padding(8)
-    .background(.ultraThinMaterial)
+    .background(
+        ZStack {
+            (categoryColors[category] ?? .gray).opacity(0.08)
+            .cornerRadius(6)
+            // 下地のultraThinMaterial
+            Color.clear.background(.ultraThinMaterial)
+        }
+    )
     .cornerRadius(6)
     .padding(.horizontal, 4)
 }
@@ -272,14 +416,15 @@ private var deletedItemsSection: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(deletedItems, id: \.self) { item in
-                    Button { restoreDeletedItem(item) } label: {
+                    Button {
+                        restoreDeletedItem(item)
+                    } label: {
                         Text(item)
-                            .font(.caption)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(.ultraThinMaterial)
-                            .cornerRadius(10)
+                            .font(.caption2)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
                     }
+                    .buttonStyle(ModernButtonStyle())
                 }
             }
             .padding(.horizontal)
@@ -289,17 +434,20 @@ private var deletedItemsSection: some View {
 
 private var plusButton: some View {
     Button {
-        showAddTaskSheet = true
+        showAddTaskSheet.toggle()
+        isExpanded.toggle()
     } label: {
         Image(systemName: "plus")
+            .rotationEffect(.degrees(isExpanded ? 45 : 0))
             .foregroundColor(.white)
             .font(.system(size: 24, weight: .bold))
             .frame(width: 56, height: 56)
-            .background(Color.accentColor)
+            .background(Color(red: 44/255, green: 66/255, blue: 66/255))
             .clipShape(Circle())
             .shadow(radius: 4)
             .padding()
     }
+    .animation(.spring(), value: isExpanded)
 }
 
 
@@ -364,7 +512,9 @@ extension ContentView {
         let trimmedCategory = newCategory.trimmingCharacters(in: .whitespaces)
         guard !trimmedCategory.isEmpty, !categories.contains(trimmedCategory) else { return } // 空または重複は追加しない
         categories.append(trimmedCategory)
+        categoryColors[trimmedCategory] = categoryColors[trimmedCategory] ?? .gray
         saveCategories() // 保存を追加
+        saveCategoryColors()
         newCategory = ""
     }
 
@@ -453,9 +603,58 @@ extension ContentView {
             saveItems() // 変更を保存
         }
     }
+
+    // MARK: - カテゴリカラーの保存・読込
+    private func saveCategoryColors() {
+        let rgbData = categoryColors.mapValues { color in
+            let uiColor = UIColor(color)
+            var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+            uiColor.getRed(&r, green: &g, blue: &b, alpha: &a)
+            return [Double(r), Double(g), Double(b), Double(a)]
+        }
+        if let data = try? JSONEncoder().encode(rgbData) {
+            UserDefaults.standard.set(data, forKey: "categoryColorsKey")
+        }
+    }
+
+    private func loadCategoryColors() {
+        if let data = UserDefaults.standard.data(forKey: "categoryColorsKey"),
+           let raw = try? JSONDecoder().decode([String: [Double]].self, from: data) {
+            categoryColors = raw.compactMapValues { arr in
+                if arr.count == 4 {
+                    return Color(red: arr[0], green: arr[1], blue: arr[2], opacity: arr[3])
+                }
+                return nil
+            }
+        }
+    }
 }
 
 /*
     注意：このアプリは UserDefaults を用いてリスト内容・履歴を保存しているため、
     アプリを閉じたり端末を再起動してもデータは保持されます。
 */
+
+// MARK: - Color Extension for Hex Initialization
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let r, g, b: UInt64
+        switch hex.count {
+        case 6: // RGB (24-bit)
+            (r, g, b) = ((int >> 16) & 0xFF, (int >> 8) & 0xFF, int & 0xFF)
+        default:
+            (r, g, b) = (1, 1, 0)
+        }
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue: Double(b) / 255,
+            opacity: 1
+        )
+    }
+}
+
