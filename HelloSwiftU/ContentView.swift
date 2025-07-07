@@ -4,7 +4,7 @@ struct ModernButtonStyle: ButtonStyle {
         configuration.label
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
-            .background(.ultraThinMaterial)
+            .background(Color.white.opacity(0.15))
             .cornerRadius(12)
             .shadow(color: .black.opacity(0.1), radius: 3, x: 0, y: 2)
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
@@ -59,8 +59,11 @@ struct ContentView: View {
                 // Remove solid white background from ZStack, keep only Lottie or use a subtle background if needed
                 // Color(hex: "#FDFDFD")
                 //     .ignoresSafeArea()
-                LottieView(filename: "Animation - 1751589879123")
-                    .ignoresSafeArea()
+                
+                
+//                ここの３行をONにするとLottieの背景（黒猫）を表示
+//                LottieView(filename: "Animation - 1751589879123")
+//                    .ignoresSafeArea()
 
                 VStack(spacing: 10) {
                     List {
@@ -138,8 +141,11 @@ struct ContentView: View {
 
                 plusButton
             }
-            .navigationTitle("To Do 🛒")
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("To Do 🐈‍⬛")
+                        .font(.custom("Times New Roman", size: 24))
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack {
                         Button {
@@ -171,6 +177,14 @@ struct ContentView: View {
             }
             .environment(\.editMode, editMode)
             .onAppear {
+                let appearance = UINavigationBarAppearance()
+                appearance.configureWithTransparentBackground()
+                appearance.titleTextAttributes = [
+                    .font: UIFont(name: "Times New Roman", size: 24)!
+                ]
+                UINavigationBar.appearance().standardAppearance = appearance
+                UINavigationBar.appearance().scrollEdgeAppearance = appearance
+
                 loadItems()
                 loadDeletedItems()
                 loadCategories()
@@ -295,6 +309,11 @@ struct ContentView: View {
                                 .disabled(newCategory.trimmingCharacters(in: .whitespaces).isEmpty)
                             }
                             .padding()
+                            .background(
+                                Image("liquidGlassBackground")
+                                    .resizable()
+                                    .scaledToFill()
+                            )
                             .background(.ultraThinMaterial)
                             .cornerRadius(20)
                             .padding(.horizontal, 24)
