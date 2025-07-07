@@ -2,8 +2,8 @@
 struct ModernButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
             .background(Color.white.opacity(0.15))
             .cornerRadius(12)
             .shadow(color: .black.opacity(0.1), radius: 3, x: 0, y: 2)
@@ -56,10 +56,29 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottomTrailing) {
-                // Remove solid white background from ZStack, keep only Lottie or use a subtle background if needed
-                // Color(hex: "#FDFDFD")
-                //     .ignoresSafeArea()
-                
+                // --- 紙風の質感背景 ---
+                ZStack {
+                    Color(red: 0.98, green: 0.97, blue: 0.94)
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            Color.white.opacity(0.5),
+                            Color.white.opacity(0.0)
+                        ]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    .blendMode(.overlay)
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            Color.black.opacity(0.02),
+                            Color.clear
+                        ]),
+                        startPoint: .bottomTrailing,
+                        endPoint: .topLeading
+                    )
+                    .blendMode(.multiply)
+                }
+                .ignoresSafeArea()
                 
 //                ここの３行をONにするとLottieの背景（黒猫）を表示
 //                LottieView(filename: "Animation - 1751589879123")
@@ -72,6 +91,7 @@ struct ContentView: View {
                                 Section(header: headerView(for: category)) {
                                     ForEach(Array(items.enumerated()), id: \.element) { index, item in
                                         itemRow(for: item, in: category)
+                                            .listRowBackground(Color.clear)
                                     }
                                     .onMove { indices, newOffset in
                                         moveItems(in: category, indices: indices, newOffset: newOffset)
@@ -80,6 +100,8 @@ struct ContentView: View {
                             }
                         }
                     }
+                    .scrollContentBackground(.hidden)
+                    .background(Color.clear)
                     .listStyle(.plain)
                     // REMOVE any .background(Color.white) or .background(.ultraThinMaterial) from List or VStack here
                 }
@@ -204,40 +226,62 @@ struct ContentView: View {
                         VStack(spacing: 16) {
                             VStack(alignment: .leading, spacing: 16) {
                                 // 入力欄
-                                TextField("例：ランチミーティング 1/10 12:30", text: $newItem)
+                                TextField("例：キャットフード", text: $newItem)
                                     .padding()
                                     .background(.ultraThinMaterial)
                                     .cornerRadius(12)
 
-                                // 説明欄
-                                Text("説明")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                                TextField("メモを追加", text: .constant(""))
-                                    .padding()
-                                    .background(.ultraThinMaterial)
-                                    .cornerRadius(12)
-
-                                // オプション（ダミー）
-                                HStack {
-                                    Button("今日") {}
-                                        .padding(.horizontal)
-                                        .padding(.vertical, 8)
-                                        .background(.thinMaterial)
-                                        .cornerRadius(20)
-
-                                    Button("優先度") {}
-                                        .padding(.horizontal)
-                                        .padding(.vertical, 8)
-                                        .background(.thinMaterial)
-                                        .cornerRadius(20)
-
-                                    Button("リマインダー") {}
-                                        .padding(.horizontal)
-                                        .padding(.vertical, 8)
-                                        .background(.thinMaterial)
-                                        .cornerRadius(20)
+                                // カテゴリ選択: 横スクロールのタブ式タグボタン
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(categories, id: \.self) { category in
+                                            Button(action: {
+                                                selectedCategory = category
+                                            }) {
+                                                Text(category)
+                                                    .font(.caption)
+                                                    .padding(.horizontal, 12)
+                                                    .padding(.vertical, 6)
+                                                    .background(selectedCategory == category ? Color(hex: "#5F7F67") : Color.gray.opacity(0.2))
+                                                    .foregroundColor(.white)
+                                                    .cornerRadius(16)
+                                            }
+                                        }
+                                    }
+                                    .padding(.horizontal, 4)
                                 }
+                                .padding(.vertical, 2)
+
+//                ここは追々実装する
+//                                // 説明欄
+//                                Text("説明")
+//                                    .font(.caption)
+//                                    .foregroundColor(.gray)
+//                                TextField("メモを追加", text: .constant(""))
+//                                    .padding()
+//                                    .background(.ultraThinMaterial)
+//                                    .cornerRadius(12)
+//
+//                                // オプション（ダミー）
+//                                HStack {
+//                                    Button("今日") {}
+//                                        .padding(.horizontal)
+//                                        .padding(.vertical, 8)
+//                                        .background(.thinMaterial)
+//                                        .cornerRadius(20)
+//
+//                                    Button("優先度") {}
+//                                        .padding(.horizontal)
+//                                        .padding(.vertical, 8)
+//                                        .background(.thinMaterial)
+//                                        .cornerRadius(20)
+//
+//                                    Button("リマインダー") {}
+//                                        .padding(.horizontal)
+//                                        .padding(.vertical, 8)
+//                                        .background(.thinMaterial)
+//                                        .cornerRadius(20)
+//                                }
 
                                 // 保存ボタン
                                 Button {
