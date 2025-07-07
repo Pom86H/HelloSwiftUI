@@ -27,6 +27,7 @@ struct ContentView: View {
     @State private var showAddCategorySheet = false
 
     @State private var deletedItems: [String] = [] // 削除されたアイテムの履歴
+    @State private var showDeletedItemsSheet = false
 
     @State private var categoryToDelete: String? = nil // 削除確認ダイアログで選択されたカテゴリ
     @State private var showDeleteCategoryConfirmation = false // カテゴリ削除確認ダイアログの表示/非表示
@@ -55,6 +56,9 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottomTrailing) {
+                // Remove solid white background from ZStack, keep only Lottie or use a subtle background if needed
+                // Color(hex: "#FDFDFD")
+                //     .ignoresSafeArea()
                 LottieView(filename: "Animation - 1751589879123")
                     .ignoresSafeArea()
 
@@ -74,27 +78,18 @@ struct ContentView: View {
                         }
                     }
                     .listStyle(.plain)
-
-                    if !deletedItems.isEmpty {
-                        deletedItemsSection
-                    }
+                    // REMOVE any .background(Color.white) or .background(.ultraThinMaterial) from List or VStack here
                 }
                 .padding(.bottom, 60)
 
-                // --- カスタムポップアップ ---
-                if showAddTaskSheet {
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea()
-                        .onTapGesture {
-                            withAnimation { showAddTaskSheet = false }
-                        }
-
+                // --- リスト追加・カテゴリ追加ボタン (isExpanded時のみ表示) ---
+                if isExpanded {
                     ZStack {
                         // 左斜め上のリスト追加
                         Button {
                             withAnimation {
-                                showAddTaskSheet = false
                                 showAddItemSheet = true
+                                isExpanded = false
                             }
                         } label: {
                             VStack {
@@ -106,7 +101,7 @@ struct ContentView: View {
                             .foregroundColor(.white)
                             .frame(width: 56, height: 56)
                             .background(
-                                Color(red: 95/255, green: 127/255, blue: 103/255)
+                                Color(hex: "#5F7F67")
                                     .overlay(.ultraThinMaterial)
                             )
                             .clipShape(Circle())
@@ -117,8 +112,8 @@ struct ContentView: View {
                         // 左のカテゴリ追加
                         Button {
                             withAnimation {
-                                showAddTaskSheet = false
                                 showAddCategorySheet = true
+                                isExpanded = false
                             }
                         } label: {
                             VStack {
@@ -130,7 +125,7 @@ struct ContentView: View {
                             .foregroundColor(.white)
                             .frame(width: 56, height: 56)
                             .background(
-                                Color(red: 95/255, green: 127/255, blue: 103/255)
+                                Color(hex: "#5F7F67")
                                     .overlay(.ultraThinMaterial)
                             )
                             .clipShape(Circle())
@@ -138,33 +133,40 @@ struct ContentView: View {
                         }
                         .offset(x: -95, y: -30)
                     }
-                    .transition(.scale)
                 }
-                // --- end カスタムポップアップ ---
+                // --- end リスト追加・カテゴリ追加ボタン ---
 
                 plusButton
             }
             .navigationTitle("To Do 🛒")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        withAnimation {
-                            editMode?.wrappedValue = editMode?.wrappedValue == .active ? .inactive : .active
+                    HStack {
+                        Button {
+                            showDeletedItemsSheet = true
+                        } label: {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .foregroundColor(Color(hex: "#5F7F67"))
                         }
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: editMode?.wrappedValue == .active ? "checkmark" : "square.and.pencil")
-                                .foregroundColor(.white)
-                            Text(editMode?.wrappedValue == .active ? "完了" : "編集")
-                                .foregroundColor(.white)
+
+                        Button {
+                            withAnimation {
+                                editMode?.wrappedValue = editMode?.wrappedValue == .active ? .inactive : .active
+                            }
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: editMode?.wrappedValue == .active ? "checkmark" : "square.and.pencil")
+                                    .foregroundColor(.white)
+                                Text(editMode?.wrappedValue == .active ? "完了" : "編集")
+                                    .foregroundColor(.white)
+                            }
+                            .font(.caption)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(Color(hex: "#5F7F67"))
+                            .cornerRadius(12)
                         }
-                        .font(.caption)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(Color(hex: "#5F7F67"))
-                        .cornerRadius(12)
                     }
-                    .frame(width: 100, height: 40)
                 }
             }
             .environment(\.editMode, editMode)
@@ -313,6 +315,7 @@ struct ContentView: View {
             }
         )
     }
+    // 履歴シートはNavigationStackチェーン内に配置
 
 private func headerView(for category: String) -> some View {
     VStack(alignment: .leading, spacing: 4) {
@@ -340,6 +343,39 @@ private func headerView(for category: String) -> some View {
                 }
             }
         }
+        .sheet(isPresented: $showDeletedItemsSheet) {
+            NavigationView {
+                VStack(alignment: .leading) {
+                    if deletedItems.isEmpty {
+                        Text("削除履歴はありません")
+                            .foregroundColor(.gray)
+                            .padding()
+                    } else {
+                        List {
+                            ForEach(deletedItems, id: \.self) { item in
+                                HStack {
+                                    Text(item)
+                                    Spacer()
+                                    Button("復元") {
+                                        restoreDeletedItem(item)
+                                    }
+                                    .buttonStyle(ModernButtonStyle())
+                                }
+                            }
+                        }
+                        .listStyle(.plain)
+                    }
+                }
+                .navigationTitle("削除履歴")
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("閉じる") {
+                            showDeletedItemsSheet = false
+                        }
+                    }
+                }
+            }
+        }
 
         if selectedCategoryForColorChange == category {
             let presetColors: [Color] = [
@@ -361,6 +397,8 @@ private func headerView(for category: String) -> some View {
             }
         }
     }
+    // Optionally: You could add a subtle background, but do NOT use solid white.
+    //.background(.ultraThinMaterial) // Use if you want a light blur, otherwise leave transparent.
 }
 
 private func itemRow(for item: String, in category: String) -> some View {
@@ -387,50 +425,29 @@ private func itemRow(for item: String, in category: String) -> some View {
                 editingItem = nil
             })
         } else {
-            Text(item).onTapGesture {
-                if editMode?.wrappedValue == .active {
-                    editingItem = (category, item)
-                    editedItemName = item
+            Text(item)
+                .font(.caption)
+                .onTapGesture {
+                    if editMode?.wrappedValue == .active {
+                        editingItem = (category, item)
+                        editedItemName = item
+                    }
                 }
-            }
         }
     }
-    .padding(8)
+    .padding(4)
     .background(
         ZStack {
             (categoryColors[category] ?? .gray).opacity(0.08)
-            .cornerRadius(6)
-            // 下地のultraThinMaterial
+                .cornerRadius(6)
+            // Only use .ultraThinMaterial as a background, not solid white
             Color.clear.background(.ultraThinMaterial)
         }
     )
     .cornerRadius(6)
-    .padding(.horizontal, 4)
+    .padding(.horizontal, 2)
 }
 
-private var deletedItemsSection: some View {
-    VStack(alignment: .leading) {
-        Text("削除したアイテム（履歴）")
-            .font(.subheadline)
-            .padding(.leading)
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(deletedItems, id: \.self) { item in
-                    Button {
-                        restoreDeletedItem(item)
-                    } label: {
-                        Text(item)
-                            .font(.caption2)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                    }
-                    .buttonStyle(ModernButtonStyle())
-                }
-            }
-            .padding(.horizontal)
-        }
-    }
-}
 
 private var plusButton: some View {
     Button {
@@ -442,7 +459,7 @@ private var plusButton: some View {
             .foregroundColor(.white)
             .font(.system(size: 24, weight: .bold))
             .frame(width: 56, height: 56)
-            .background(Color(red: 44/255, green: 66/255, blue: 66/255))
+            .background(Color(hex: "#5F7F67"))
             .clipShape(Circle())
             .shadow(radius: 4)
             .padding()
